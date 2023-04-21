@@ -11,5 +11,3 @@ if ($Timer.IsPastDue) {
 
 # Write an information log with the current time.
 Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
-
-Search-AzGraph -Query 'Resources | project name, type | limit 5'
