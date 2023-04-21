@@ -1,15 +1,43 @@
 # Input bindings are passed in via param block.
 param($Timer)
 
-# Get the current universal time in the default string format
-$currentUTCtime = (Get-Date).ToUniversalTime()
+$Query = @"
+resources
+| where type == "microsoft.storage/storageaccounts" | project name, type, kind
+"@
+$StorageAccountResourceGroup = "sqlbrains_group"
+$StorageAccountName = "vmrestartdata"
+$StorageTableName = "restartdata"
+$StorageTablePartitionKey = 'VMPartition'
+$PropertyToCompare = "name"
 
-# The 'IsPastDue' porperty is 'true' when the current function invocation is later than scheduled.
-if ($Timer.IsPastDue) {
-    Write-Host "PowerShell timer is running late!"
+$Result = Search-AzGraph -Query $Query
+
+$storageAccount = Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroup
+$storageTable = Get-AzStorageTable -Context $storageAccount.Context -Name $StorageTableName
+
+#$OldResult = Get-AzTableRowAll -Table $storageTable.CloudTable
+
+#$ComparedObject = Compare-Object -ReferenceObject $OldResult -DifferenceObject $Result -Property $PropertyToCompare
+
+#$OldResult | Remove-AzTableRow -Table $storageTable.CloudTable
+
+foreach($element in $Result)
+{
+    $hashtable = @{}
+    foreach( $property in $element.psobject.properties.name )
+    {
+        $hashtable[$property] = $element.$property
+    }
+    Add-AzTableRow -Table $storageTable.CloudTable -property $hashtable -partitionKey $StorageTablePartitionKey -rowkey ([guid]::NewGuid().tostring())
 }
 
-# Write an information log with the current time.
-Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
+$Body = @{data = (($Result | ConvertTo-Html -Fragment) -join "")} | ConvertTo-Json
 
-Write-Host (Get-AzContext)
+Invoke-RestMethod -Method Post -Uri $env:LOGIC_APP_URL -Body $Body -ContentType "application/json"
+
+
+
+
+
+
