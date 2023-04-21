@@ -1,26 +1,22 @@
-# Input bindings are passed in via param block.
 param($Timer)
 
+# Set Up the query for Resource graph
 $Query = @"
 resources
 | where type == "microsoft.storage/storageaccounts" | project name, type, kind
 "@
-$StorageAccountResourceGroup = "sqlbrains_group"
-$StorageAccountName = "vmrestartdata"
-$StorageTableName = "restartdata"
-$StorageTablePartitionKey = 'VMPartition'
-$PropertyToCompare = "name"
+
+$StorageAccountResourceGroup = "sqlbrains_group"    #Resource Group Name
+$StorageAccountName = "vmrestartdata"               #Storage Account Name
+$StorageTableName = "restartdata"                   #Storage Table Name
+$StorageTablePartitionKey = 'VMPartition'           #Partion Name (Can be anything)
 
 $Result = Search-AzGraph -Query $Query
 
 $storageAccount = Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroup
 $storageTable = Get-AzStorageTable -Context $storageAccount.Context -Name $StorageTableName
 
-#$OldResult = Get-AzTableRowAll -Table $storageTable.CloudTable
-
-#$ComparedObject = Compare-Object -ReferenceObject $OldResult -DifferenceObject $Result -Property $PropertyToCompare
-
-#$OldResult | Remove-AzTableRow -Table $storageTable.CloudTable
+Get-AzTableRow -Table $storageTable.CloudTable | Remove-AzTableRow -Table $storageTable.CloudTable
 
 foreach($element in $Result)
 {
