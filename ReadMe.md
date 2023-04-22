@@ -12,17 +12,17 @@ You need to enable Managed identity on Azure Function and provide `Reader` acces
 
 ## Logic App Setup
 
-1. Create a Logic app with HTTP Post trigger and Body JSON schema as follow.
+1. Create a Logic app with HTTP Post trigger and Sample Payload as follow, using steps mentioned in the section [here](https://learn.microsoft.com/en-us/azure/app-service/tutorial-send-email?tabs=dotnet#create-the-logic-app).
     ```
     {
-        "properties": {
-            "data": {
-                "type": "string"
-            }
-        },
-        "type": "object"
+        "data": ""
     }
     ```
+    Trigger should look like follow 
+    
+    ![alt text](./Trigger.png) 
+2. The above documentation has mail recipient, subject and body all as part of the trigger. As we just getting the body(as data), you need to hardcode other two in send mail action.
+   Action should look like follow
+   ![alt text](Action.png)
 
-1. Subsequently add action of sending mail with dynamic content `data` as mail body.
-1. Save the HTTP Post URL as `LOGIC_APP_URL` in Application setting of Function App.
+3. Save the HTTP Post URL as `LOGIC_APP_URL` in Application setting of Function App.
