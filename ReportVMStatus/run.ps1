@@ -11,7 +11,7 @@ resources
    | where type =~ 'microsoft.resourcehealth/resourceannotations'
    | project resourceId = tolower(tostring(properties.targetResourceId)),  Region = location, resourceGroup, RebootTime = properties.occurredTime, Reason = properties.reason, category=properties.category, context=properties.context
 ) on resourceId
-| project VM_name, resourceId, VM_SKU, RebootTime, Reason, resourceGroup, context, category
+| project VM_name, resourceId, VM_SKU, RebootTime = todatetime(RebootTime) - 5h,, Reason, resourceGroup, context, category
 "@
 
 Write-host $Query
